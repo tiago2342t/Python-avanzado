@@ -250,6 +250,44 @@ def refresh(hangman_deaths,deaths,letters):
     print(hangman_deaths.get(deaths))
 
 
+def game_loop(hangman_deaths, deaths, letters, non_letter, discovered, dict_word, word):
+    while True:
+        refresh(hangman_deaths, deaths, letters)
+        if non_letter == 1:
+            print('Debes ingresar una de las letras disponibles')
+            non_letter = 0
+        try:
+            letter = input('''¡Adivina la palabra!     ''' + ''.join(discovered) + '''
+    Ingresa una letra: ''').upper()
+            letters[letters.index(letter)] = ''
+        except ValueError:
+            non_letter = 1
+        fail = True
+        discovered, fail = compare_letter(letter, dict_word, discovered, fail)
+        if fail == True:
+            deaths += 1
+            if deaths == 10:
+                refresh(hangman_deaths, deaths, letters)
+                print('¡Perdiste! La palabra era ' + word)
+                again = input('¿Quieres jugar otra vez? (1-Si 0-No):  ')
+                if again == '1':
+                    word, dict_word, discovered, deaths, letters = new_word(word, dict_word, discovered, deaths,
+                                                                            letters)
+                    continue
+                else:
+                    print('Gracias por jugar :)')
+                    break
+        if ''.join(discovered).replace(' ', '') == word:
+            refresh(hangman_deaths, 11, letters)
+            print('Tuviste ', deaths, ' erorres      ' + ''.join(discovered))
+            again = input('¿Quieres jugar otra vez? (1-Si 0-No):  ')
+            if again == '1':
+                word, dict_word, discovered, deaths, letters = new_word(word, dict_word, discovered, deaths, letters)
+                continue
+            else:
+                print('Gracias por jugar :)')
+                break
+
 def run():
     hangman_deaths = image_hangman()
     word = ''
@@ -259,41 +297,7 @@ def run():
     letters = []
     non_letter = 0
     word, dict_word, discovered, deaths, letters = new_word(word, dict_word, discovered, deaths, letters)
-    while True:
-        refresh(hangman_deaths,deaths,letters)
-        if non_letter == 1:
-            print('Debes ingresar una de las letras disponibles')
-            non_letter = 0
-        try:
-            letter = input('''¡Adivina la palabra!     '''+ ''.join(discovered) +'''
-Ingresa una letra: ''').upper()
-            letters[letters.index(letter)] = ''
-        except ValueError:
-            non_letter = 1
-        fail = True
-        discovered,fail = compare_letter(letter, dict_word, discovered, fail)
-        if fail == True:
-            deaths += 1
-            if deaths == 10:
-                refresh(hangman_deaths,deaths,letters)
-                print('¡Perdiste! La palabra era ' + word)
-                again = input('¿Quieres jugar otra vez? (1-Si 0-No):  ')
-                if again == '1':
-                    word, dict_word, discovered, deaths, letters = new_word(word, dict_word, discovered, deaths, letters)
-                    continue
-                else:
-                    print('Gracias por jugar :)')
-                    break
-        if ''.join(discovered).replace(' ','') == word:
-            refresh(hangman_deaths,11,letters)
-            print('Tuviste ', deaths, ' erorres      '+ ''.join(discovered))
-            again = input('¿Quieres jugar otra vez? (1-Si 0-No):  ')
-            if again == '1':
-                word, dict_word, discovered, deaths, letters = new_word(word, dict_word, discovered, deaths,letters)
-                continue
-            else:
-                print('Gracias por jugar :)')
-                break
+    game_loop(hangman_deaths, deaths, letters, non_letter, discovered, dict_word, word)
 
 
 if __name__ == '__main__':
