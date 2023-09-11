@@ -1,7 +1,5 @@
 import os
 import random
-# import time
-from functools import reduce
 
 FILE_TO_READ = './archivos/data.txt'
 MAX_MISTAKES = 10
@@ -305,7 +303,7 @@ def game_loop(images, word, dict_word, discovered):
                 run()               
             else: 
                 print('Gracias por jugar :)')
-                
+
             break
             
 
