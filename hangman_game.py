@@ -1,10 +1,21 @@
 import os
 import random
-import time
-from functools import reduce
+
+FILE_TO_READ = './archivos/data.txt'
+MAX_MISTAKES = 10
+WINNING_IMAGE_INDEX = 11
+
+ALPHABET = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
+            'I', 'J', 'K', 'L', 'M', 'N', 'Ñ', 'O',
+            'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W',
+            'X', 'Y', 'Z']
 
 
-def logo_hangman():
+def clearScreen():
+    os.system("cls" if os.name == "nt" else "clear")
+
+
+def print_logo():
     print('''
 
     ╔═══════════════════════════════════════════════════════════╗
@@ -19,7 +30,7 @@ def logo_hangman():
 ''')
 
 
-def image_hangman():
+def get_images():
     die0 = '''
 
 
@@ -101,7 +112,7 @@ def image_hangman():
           ║
           ║
           ║
-          ║    / '''+chr(92)+'''
+          ║    / ''' + chr(92) + '''
           ║   d   b
         __║__________
       /   ║         /|
@@ -116,7 +127,7 @@ def image_hangman():
           ║
           ║
           ║     │
-          ║    / '''+chr(92)+'''
+          ║    / ''' + chr(92) + '''
           ║   d   b
         __║__________
       /   ║         /|
@@ -131,7 +142,7 @@ def image_hangman():
           ║
           ║    ─┼─
           ║     │
-          ║    / '''+chr(92)+'''
+          ║    / ''' + chr(92) + '''
           ║   d   b
         __║__________
       /   ║         /|
@@ -146,7 +157,7 @@ def image_hangman():
           ║
           ║   ┌─┼─┐
           ║     │
-          ║    / '''+chr(92)+'''
+          ║    / ''' + chr(92) + '''
           ║   d   b
         __║__________
       /   ║         /|
@@ -161,7 +172,7 @@ def image_hangman():
           ║     @
           ║   ┌─┼─┐
           ║     │
-          ║    / '''+chr(92)+'''
+          ║    / ''' + chr(92) + '''
           ║   d   b
         __║__________
       /   ║         /|
@@ -176,7 +187,7 @@ def image_hangman():
           ║     @       ¡AHORCADO!
           ║   ┌─┼─┐
           ║     │
-          ║    / '''+chr(92)+'''
+          ║    / ''' + chr(92) + '''
           ║   d   b
         __║__________
       /   ║         /|
@@ -196,18 +207,21 @@ def image_hangman():
         __║__________        @
       /   ║         /|     └─┼─┘  
      /____________ / |       │
-    |             | /       / '''+chr(92)+'''
+    |             | /       / ''' + chr(92) + '''
     |_____________|/       d   b
 
 '''
-    deaths = {0: die0, 1: die1, 2: die2, 3: die3, 4: die4, 5: die5, 6: die6, 7: die7, 8: die8, 9: die9, 10: die10, 11: die11}
-    return deaths
+    images = {0: die0, 1: die1, 2: die2, 3: die3, 4: die4, 5: die5, 6: die6, 7: die7, 8: die8, 9: die9, 10: die10,
+              11: die11}
+    return images
 
 
 def read_word():
     word_li = []
-    with open('./archivos/data.txt', 'r', encoding='utf-8') as data_words:
+
+    with open(FILE_TO_READ, 'r', encoding='utf-8') as data_words:
         word = random.choice([word.strip().upper() for word in data_words])
+
     for letter in word:
         if letter == 'Á':
             letter = 'A'
@@ -220,86 +234,86 @@ def read_word():
         elif letter == 'Ú':
             letter = 'U'
         word_li.append(letter)
+
     return ''.join(word_li)
 
 
-def new_word(word, dict_word, discovered, deaths, letters):
+def new_word():
     word = read_word()
-    dict_word = {i[0] : i[1] for i in enumerate(word)}
+
+    dict_word = {i[0]: i[1] for i in enumerate(word)}
     discovered = ['- ' for i in range(len(dict_word))]
-    deaths = 0
-    letters = ['A','B','C','D','E','F','G','H',
-               'I','J','K','L','M','N','Ñ','O',
-               'P','Q','R','S','T','U','V','W',
-               'X','Y','Z']
-    return word, dict_word, discovered, deaths, letters
+
+    return word, dict_word, discovered
 
 
 def compare_letter(letter, dict_word, discovered, fail):
-    for l in range(len(dict_word)):
-        if dict_word.get(l) == letter:
-            discovered[l] = letter + ' '
+    for i in range(len(dict_word)):
+        if dict_word.get(i) == letter:
+            discovered[i] = letter + ' '
             fail = False
+
     return discovered, fail
 
 
-def refresh(hangman_deaths,deaths,letters):
-    os.system('clear')
-    logo_hangman()
-    print('Letras disponibles: '+"  ".join(letters))
-    print(hangman_deaths.get(deaths))
+def refresh(images, mistakes, available_letters):
+    clearScreen()
+    print_logo()
+    print('Letras disponibles: ' + "  ".join(available_letters))
+    print(images.get(mistakes))
 
 
-def game_loop(hangman_deaths, deaths, letters, non_letter, discovered, dict_word, word):
+def game_loop(images, word, dict_word, discovered):
+    available_letters = ALPHABET.copy()
+    mistakes = 0
+    letter = ""
+    end = False
+
     while True:
-        refresh(hangman_deaths, deaths, letters)
-        if non_letter == 1:
-            print('Debes ingresar una de las letras disponibles')
-            non_letter = 0
-        try:
-            letter = input('''¡Adivina la palabra!     ''' + ''.join(discovered) + '''
-    Ingresa una letra: ''').upper()
-            letters[letters.index(letter)] = ''
-        except ValueError:
-            non_letter = 1
+        refresh(images, mistakes, available_letters)
+        print('¡Adivina la palabra!     ' + ''.join(discovered))
+
+        while not letter in available_letters:
+            letter = input('Ingresa una letra: ').upper()
+
+            if not letter in available_letters:
+                print('Debes ingresar una de las letras disponibles')
+
+        available_letters[available_letters.index(letter)] = ''
+
         fail = True
         discovered, fail = compare_letter(letter, dict_word, discovered, fail)
-        if fail == True:
-            deaths += 1
-            if deaths == 10:
-                refresh(hangman_deaths, deaths, letters)
+
+        if fail:
+            mistakes += 1
+
+            if mistakes == MAX_MISTAKES:
+                refresh(images, mistakes, available_letters)
                 print('¡Perdiste! La palabra era ' + word)
-                again = input('¿Quieres jugar otra vez? (1-Si 0-No):  ')
-                if again == '1':
-                    word, dict_word, discovered, deaths, letters = new_word(word, dict_word, discovered, deaths,
-                                                                            letters)
-                    continue
-                else:
-                    print('Gracias por jugar :)')
-                    break
+                end = True
+
         if ''.join(discovered).replace(' ', '') == word:
-            refresh(hangman_deaths, 11, letters)
-            print('Tuviste ', deaths, ' erorres      ' + ''.join(discovered))
-            again = input('¿Quieres jugar otra vez? (1-Si 0-No):  ')
-            if again == '1':
-                word, dict_word, discovered, deaths, letters = new_word(word, dict_word, discovered, deaths, letters)
-                continue
+            refresh(images, WINNING_IMAGE_INDEX, available_letters)
+            print('Tuviste ', mistakes, ' errores      ' + ''.join(discovered))
+            end = True
+
+        if end:
+            play_again = input('¿Quieres jugar otra vez? (1-Si / 0-No):  ') == "1"
+
+            if play_again:
+                run()
             else:
                 print('Gracias por jugar :)')
-                break
+
+            break
+
 
 def run():
-    hangman_deaths = image_hangman()
-    word = ''
-    dict_word = {}
-    discovered = []
-    deaths = 0
-    letters = []
-    non_letter = 0
-    word, dict_word, discovered, deaths, letters = new_word(word, dict_word, discovered, deaths, letters)
-    game_loop(hangman_deaths, deaths, letters, non_letter, discovered, dict_word, word)
+    images = get_images()
+    word, dict_word, discovered = new_word()
+    game_loop(images, word, dict_word, discovered)
 
 
 if __name__ == '__main__':
-    os.system('clear')
+    clearScreen()
     run()
